@@ -55,6 +55,8 @@ class Game extends React.Component {
       }],
       stepNumber: 0,
       xIsNext: true,
+      xWins: 0,
+      gamesPlayed: 0,
     };
   }
 
@@ -62,6 +64,7 @@ class Game extends React.Component {
     const history = this.state.history.slice(0, this.state.stepNumber + 1);
     const current = history[history.length - 1];
     const squares = current.squares.slice();
+    
     if (calculateWinner(squares) || squares[i]) {
       return;
     }
@@ -75,7 +78,30 @@ class Game extends React.Component {
     });
   }
 
+  getStats(squares){
+    const winner = calculateWinner(squares);
+    const gamesPlayed = this.state.gamesPlayed;
+
+    let xWins = this.state.xWins;
+    if (winner) {
+      if (winner === 'X'){
+        xWins = this.state.xWins + 1;
+      }
+      this.setState({
+        gamesPlayed: gamesPlayed + 1,
+        xWins: xWins,
+      });
+    }
+  }
+
   jumpTo(step) {
+    const history = this.state.history;
+    const current = history[this.state.stepNumber];
+    
+    if (step === 0){
+      this.getStats(current.squares);
+    }
+
     this.setState({
       stepNumber: step,
       xIsNext: (step % 2) === 0,
@@ -86,11 +112,13 @@ class Game extends React.Component {
     const history = this.state.history;
     const current = history[this.state.stepNumber];
     const winner = calculateWinner(current.squares);
+    const gamesPlayed = this.state.gamesPlayed;
+    const xWins = this.state.xWins;
 
     const moves = history.map((step, move) => {
       const desc = move ?
-        'Move #' + move :
-        'Game start';
+        'Movimiento #' + move :
+        'Nuevo juego';
       return (
         <li key={move}>
           <a href="#" onClick={() => this.jumpTo(move)}>{desc}</a>
@@ -99,10 +127,17 @@ class Game extends React.Component {
     });
 
     let status;
+    let games;
+    let playerStats;
     if (winner) {
-      status = 'Winner: ' + winner;
+      status = 'Ganador: ' + winner;
+      games = 'Juegos completados: ' + gamesPlayed;
+      playerStats = 'Juegos ganados por X: ' + xWins + " - Juegos gandos por O: " + (gamesPlayed - xWins);
+
     } else {
-      status = 'Next player: ' + (this.state.xIsNext ? 'X' : 'O');
+      games = 'Juegos completados: ' + gamesPlayed;
+      playerStats = 'Juegos ganados por X: ' + xWins + " - Juegos ganados por O: " + (gamesPlayed - xWins);
+      status = 'Próxima jugada: ' + (this.state.xIsNext ? 'X' : 'O');
     }
     return (
       <div className="game">
@@ -114,6 +149,8 @@ class Game extends React.Component {
         </div>
         <div className="game-info">
           <div>{status}</div>
+          <div>{games}</div>
+          <div>{playerStats}</div>
           <ol>{moves}</ol>  
         </div>
       </div>
@@ -140,7 +177,6 @@ function calculateWinner(squares) {
   }
   return null;
 }
-
 
 // ========================================
 
